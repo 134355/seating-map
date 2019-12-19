@@ -1,0 +1,14 @@
+diff --git a/widget/html/personal/changePhone_frm.html b/widget/html/personal/changePhone_frm.html
+index 82f9458..dcbc03e 100644
+--- a/widget/html/personal/changePhone_frm.html
++++ b/widget/html/personal/changePhone_frm.html
+@@ -260,7 +260,8 @@
+                 if (ret) {
+                     api.hideProgress()
+                     if (ret.errcode === 0) {
+-                        api.showProgress() // 隐藏请求loading
++                        api.hideProgress()
++                        // 隐藏请求loading
+                         if (vm.state === 0) {
+                             vm.state = 1
+                             vm.isable = 0

@@ -1,0 +1,79 @@
+html,body{
+  background-color: #eee;
+}
+
+#app{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #eee;
+}
+
+/*滚动条样式*/
+::-webkit-scrollbar {
+    width: 6px;
+    background-color: #F5F5F5;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #464c5b;
+}
+
+/*组件transition*/
+.fold-enter-active {
+  animation-name: fold-in;
+  animation-duration: .5s;
+}
+.fold-leave-active {
+  animation-name: fold-out;
+  animation-duration: .5s;
+}
+@keyframes fold-in {
+  0% {
+    transform: translate3d(0, 100%, 0);
+  }
+  50% {
+    transform: translate3d(0, 50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes fold-out {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+.faded-enter-active,.faded-leave-active{
+  transition: all 0.5s ease-out;
+}
+/* 进入开始 */
+.faded-enter{
+  transform: translateY(-500px);
+  opacity: 0;
+}
+/* 出去终点 */
+.faded-leave-active{
+  transform: translateY(500px);
+  opacity: 0;
+}
+
+.test-enter {
+    opacity: 0;
+    transform: translateY(100%);
+}
+.test-leave {
+    opacity: 0;
+    transform: translateY(-100%);
+}
+.test-enter-active,.test-leave-active {
+    transition: all 0.5s;
+}

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+        <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+        <title>改变电话号码</title>
+        <link rel="stylesheet" type="text/css" href="../../css/aui2.css"/>
+        <link rel="stylesheet" type="text/css" href="../../css/app.css"/> 
+        <style>
+            html {
+                position: relative;
+                height: 100%;
+            }
+            body{ 
+                background: #fff;
+                padding: 0 20px;
+            }
+            .oldNumbe,.newNumber { 
+                margin: 32px 0;
+            }
+            .oldNumbe__list {
+                height: 2.5rem;
+                line-height: 2.5rem;
+                margin-bottom: 17px; 
+                font-size: .7rem;
+            }
+            .oldNumbe__list .txt {
+                width: 70%;
+                font-size: .7rem;
+                text-indent: 4em;
+                opacity: .5
+            }
+            .oldNumbe__list .txt:focus {
+                opacity: 1;
+            }
+            .oldNumbe__list:first-child{
+                color: rgb(114, 114, 114);
+                background: url(../../image/personal/phone.svg) no-repeat 15px;
+                background-size: 20px;
+            }
+            .oldNumbe__list:last-child{
+                background: url(../../image/personal/verify.svg) no-repeat 15px;
+                background-size: 20px;
+            }
+            button {
+                background: none;
+                border: none;
+                color: rgb(80, 79, 79);
+                font-size: 12px;
+                margin-left: 15px;
+            }
+            .btn-nex {
+                width: 100%;
+                height: 2.2rem;
+                color: #fff;
+                text-align: center;
+                background: rgb(154, 154, 154);
+                margin: 0 auto;
+                border-radius:0; 
+                font-size: .75rem;
+            }
+            .explain {
+                text-align: center;
+                font-size: 12px;
+                margin-top: 13px;
+                color: rgb(154, 154, 154);
+            }
+            .newNumber {
+                text-align: center;
+            }
+            .newNumber__icon {
+                width: 65px;
+                margin: 50px auto 10px;
+            }
+            .newNumber__title {
+                font-size: 15px; 
+                font-weight: 700;
+            }
+            .newNumber__txt {
+                font-size: 12px;
+                color: rgb(173, 172, 172)
+            }
+            .question {
+                position: fixed;
+                bottom: 0;
+                font-size: 13px;
+                left: 0;
+                right: 0;
+                padding-bottom: 10px;
+            }
+            .question__icon {
+                width: 20px;
+                margin: 0 10px;
+            }
+           .newNumber__input {
+               margin-top: 40px;
+           }
+           .newNumber__input .sign {
+                padding: 0 10px;
+                margin-right: 20px;
+           }
+           .newNumber__input .number {
+                position: relative;
+                width: 70%;
+           }
+           .btn-enable {
+               background: rgb(29, 29, 38)
+           }
+           .warning {
+               font-size: 12px;
+               color: rgb(250, 24, 88);
+               text-align: center;
+               background: url(../../image/personal/warning.svg) no-repeat 0;
+               background-size: 18px;
+               margin: 13px 10px 0;
+               padding-left: 15px;
+           }
+           .phone {
+               text-indent: 4em
+           }
+        </style>
+    </head>
+    <body>
+        <div id="app" class="loadingApp">
+            <ul class="oldNumbe" v-if='state===0'>
+                <li class="oldNumbe__list phone border-t border-b">{{phone}}</li>
+                <li class="oldNumbe__list border-t border-b box-h-j-c">
+                    <input type="tel" placeholder="请输入验证码" class="txt" maxlength="4" v-model='code'>
+                    <button class="btn-verify"  onclick='getDate()' :disabled="code_isable==1">{{code_txt}}</button>
+                </li> 
+            </ul> 
+            <div class="newNumber" v-if='state!==0'> 
+                <img class="newNumber__icon" src="../../image/personal/newPhone.svg" alt="">
+                <h2 class="newNumber__title">新手机号</h2>
+                <h3 class="newNumber__txt">请输入您常用的11位手机号码</h3>
+                <div class="newNumber__input box-h-j-c border-all"> 
+                    <span class="sign border-r">+86</span>
+                    <input class="number" type="tel" placeholder="输入新的手机号码" maxlength="11" v-model = "newNumber">
+                </div> 
+            </div>
+            <button class="btn-nex" onclick='PostAppply()' :disabled="!isable" :class="{'btn-enable':isable===1}">{{btn_txt()}}</button>
+            <p class="explain" v-if= "warning===''">更换手机后，下次登录可使用新的手机号码登录</p>
+            <p class="warning" v-if= "state===1 && warning">{{warning}}</p>
+            <div class="question box-h-c-c" v-if="warning!=='' && window_height==true ">
+                <img class="question__icon" src="../../image/personal/ask.svg" alt="">
+                <span class="question__txt" @click='questionExplain()'>疑难解答</span>
+            </div> 
+        </div> 
+    </body>  
+    <script src="../../script/api.js"></script>
+    <script src="../../script/vue.js"></script>
+    <script src="../../script/spin.js"></script>
+    <script src="../../script/common.js"></script>
+    <script>
+        var loadingMask = new LoadingMask()
+        loadingMask.open()
+        apiready = function () {
+            loadingMask.close()
+            var h = document.body.scrollHeight
+            window.onresize = function () {
+                vm.window_height = !vm.window_height
+            }
+        }
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                state: 0, // 0 验证码页 1新号码页
+                orginalNumber: 0,
+                phone: 0,
+                code: '',
+                newNumber: '',
+                isable: 0,
+                warning: '',
+                code_txt: '获取验证码',
+                code_isable: 0,
+                window_height: true
+            },
+            methods: {
+                btn_txt: function () {
+                    if (this.state === 1) {
+                        return '确认'
+                    } else {
+                        return '下一步'
+                    }
+                },
+                questionExplain: function () {
+                    openWin('./changePhoneExplain_win.html', 'changePhoneExplain')
+                }
+            },
+            created: function () {
+                this.orginalNumber = $api.getStorage('userInfo').mobile
+                var star = this.orginalNumber.substr(3, 4) // 提取4个字符
+                this.phone = this.orginalNumber.replace(star, ' * * * * ')
+            },
+            watch: {
+                newNumber: function (val, oldVal) {
+                    if (app.verifyPhone(val, true)) {
+                        this.isable = 1
+                    } else {
+                        this.isable = 0
+                    }
+                },
+                code: function (val, oldVal) {
+                    if ((/\d{4}$/.test(val))) {
+                        this.isable = 1
+                    } else {
+                        this.isable = 0
+                    }
+                }
+            }
+        
+        })
+        function getDate () {
+            var url = '/phone/code/' + vm.orginalNumber + '?type=2'
+            var ajaxFn = function (ret, err) {
+                if (ret) {
+                    if (ret.errcode === 0) {
+                        vm.code_isable = 1
+                        var times = 60
+                        var timer = setInterval(function () {
+                            vm.code_txt = times + 's'
+                            times--
+                            if (times === 0) {
+                                clearInterval(timer)
+                                vm.code_txt = '获取验证码'
+                                vm.code_isable = 0
+                            }
+                        }, 1000)
+                    } else {
+                        app.toast(ret.msg)
+                    }
+                } else {
+                    console.log(err)
+                }
+                loadingMask.close()
+            }
+            app.ajax({
+                url: url,
+                type: 'get',
+                callback: ajaxFn,
+                hideProgress: true
+            })
+        }
+        // 验证
+        function PostAppply () {
+            showProgress()
+            var data
+            data = {
+                code: vm.code,
+                type: 2
+            }
+            if (vm.state === 1) {
+                data = {
+                    mobile: vm.newNumber
+                }
+            }
+            console.log(data)
+            function ajaxFn (ret, err) {
+                if (ret) {
+                    api.hideProgress()
+                    if (ret.errcode === 0) {
+                        api.hideProgress()
+                        // 隐藏请求loading
+                        if (vm.state === 0) {
+                            vm.state = 1
+                            vm.isable = 0
+                        } else {
+                            vm.state = 2
+                            commonToast('success', '手机号码更改成功！')
+                            app.logout()
+                        }
+                    } else if (ret.errcode === 411) {
+                        app.toast(ret.msg)
+                        vm.warning = ret.msg
+                        setTimeout(function () {
+                            vm.state = 0
+                        }, 2000)
+                    } else {
+                        if (vm.state === 0) {
+                            app.toast(ret.msg)
+                        } else {
+                            vm.warning = ret.msg
+                        }
+                    }
+                } else {
+                    api.hideProgress()
+                    app.toast(err)
+                    vm.state = 0
+                }
+            }
+            var url
+            if (vm.state === 0) {
+                url = '/phone/code/' + vm.orginalNumber + '/check'
+            }
+            if (vm.state === 1) {
+                url = '/sales/profile/'
+            }
+            app.ajax({
+                url: url,
+                type: 'post',
+                data: data,
+                callback: ajaxFn,
+                hideProgress: true
+            })
+            function showProgress () {
+                api.showProgress({
+                    title: '等待处理中',
+                    text: '请稍候',
+                    modal: true
+                })
+            }
+        }
+    </script>
+</html>
